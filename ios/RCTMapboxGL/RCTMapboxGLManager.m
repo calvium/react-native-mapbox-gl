@@ -728,5 +728,4 @@ RCT_EXPORT_METHOD(queryRenderedFeatures:(nonnull NSNumber *)reactTag
               @"coordinates": coordinates };
 }
 
->>>>>>> alseageo/queryRenderedFeatures
 @end
