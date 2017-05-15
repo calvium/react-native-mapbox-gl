@@ -9,12 +9,23 @@
 #import "RCTMapboxGLManager.h"
 #import "RCTMapboxGL.h"
 #import <Mapbox/Mapbox.h>
+
+#if __has_include("RCTConvert+CoreLocation.h")
+#import "RCTConvert+CoreLocation.h"
+#import "RCTConvert+MapKit.h"
+#import "RCTBridge.h"
+#import "RCTEventDispatcher.h"
+#import "UIView+React.h"
+#import "RCTUIManager.h"
+#else
 #import <React/RCTConvert+CoreLocation.h>
 #import <React/RCTConvert+MapKit.h>
 #import <React/RCTBridge.h>
 #import <React/RCTEventDispatcher.h>
 #import <React/UIView+React.h>
 #import <React/RCTUIManager.h>
+#endif
+
 #import "RCTMapboxGLConversions.h"
 #import "MGLPolygon+RCTAdditions.h"
 #import "MGLPolyline+RCTAdditions.h"
