@@ -457,6 +457,22 @@ public class ReactNativeMapboxGLManager extends ViewGroupManager<ReactNativeMapb
         view.setCameraUpdate(update, animated ? MapboxConstants.ANIMATION_DURATION : 0, null);
     }
 
+    // Layers
+
+    public void setLayers(ReactNativeMapboxGLView view, ReadableArray layerIdsToRemove, ReadableArray layersToSet) {
+        int removeCount = layerIdsToRemove.size();
+        for (int i = 0; i < removeCount; i++) {
+            view.removeLayer(layerIdsToRemove.getString(i));
+        }
+
+        int addCount = layersToSet.size();
+        for (int i = 0; i < addCount; i++) {
+            ReadableMap layerInfo = layersToSet.getMap(i);
+            RNMGLLayer layer = RNMGLLayerFactory.getLayerFromJS(layerInfo);
+            view.setLayer(layer);
+        }
+    }
+
     // Annotations
 
     public void spliceAnnotations(ReactNativeMapboxGLView view, boolean removeAll, ReadableArray itemsToRemove, ReadableArray itemsToAdd) {
