@@ -19,7 +19,7 @@ class RNMGLRasterLayer extends RNMGLLayer {
     RNMGLRasterLayer(ReadableMap layer) {
         String baseId = layer.getString("id");
         _sourceId = baseId + "-source";
-        _layerId = baseId + "-layer";
+        _layerId = baseId;
 
         ReadableMap properties = layer.getMap("properties");
         if (properties != null) {

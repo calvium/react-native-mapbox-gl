@@ -284,6 +284,7 @@ public class ReactNativeMapboxGLManager extends ViewGroupManager<ReactNativeMapb
     public static final int COMMAND_SELECT_ANNOTATION = 7;
     public static final int COMMAND_SPLICE_ANNOTATIONS = 8;
     public static final int COMMAND_DESELECT_ANNOTATION = 9;
+    public static final int COMMAND_SET_LAYERS = 10;
 
     @Override
     public
@@ -299,6 +300,7 @@ public class ReactNativeMapboxGLManager extends ViewGroupManager<ReactNativeMapb
                 .put("selectAnnotation", COMMAND_SELECT_ANNOTATION)
                 .put("spliceAnnotations", COMMAND_SPLICE_ANNOTATIONS)
                 .put("deselectAnnotation", COMMAND_DESELECT_ANNOTATION)
+                .put("setLayers", COMMAND_SET_LAYERS)
                 .build();
     }
 
@@ -345,6 +347,9 @@ public class ReactNativeMapboxGLManager extends ViewGroupManager<ReactNativeMapb
                 break;
             case COMMAND_DESELECT_ANNOTATION:
                 deselectAnnotation(view);
+                break;
+            case COMMAND_SET_LAYERS:
+                setLayers(view, args.getArray(0), args.getArray(1));
                 break;
             default:
                 throw new JSApplicationIllegalArgumentException("Invalid commandId " + commandId + " sent to " + getClass().getSimpleName());
