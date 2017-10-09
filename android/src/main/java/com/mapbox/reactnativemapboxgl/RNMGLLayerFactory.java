@@ -41,7 +41,7 @@ class RNMGLRasterLayer extends RNMGLLayer {
         RasterSource rasterSource = new RasterSource(_sourceId, new TileSet("tileset", _tileURL));
         RasterLayer rasterLayer = new RasterLayer(_layerId, _sourceId);
         map.addSource(rasterSource);
-        map.addLayer(rasterLayer);
+        map.addLayer(rasterLayer, _beforeLayer);
         _isAddedToMap = true;
     }
 
