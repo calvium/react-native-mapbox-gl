@@ -9,9 +9,17 @@
 
 #import "RCTMapboxAnnotationManager.h"
 
+#if __has_include("RCTUIManager.h")
 #import "RCTUIManager.h"
 #import "RCTConvert+CoreLocation.h"
 #import "UIView+React.h"
+#else
+#import <React/RCTUIManager.h>
+#import <React/RCTConvert+CoreLocation.h>
+#import <React/UIView+React.h>
+#endif
+
+
 #import "RCTMapboxAnnotation.h"
 
 @interface RCTMapboxAnnotationManager () <MGLMapViewDelegate>
