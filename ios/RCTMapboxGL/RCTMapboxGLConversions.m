@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+
 #import <React/RCTConvert+CoreLocation.h>
 #import <React/RCTConvert.h>
 #import "RCTMapboxGL.h"
@@ -18,7 +19,7 @@ UIImage *imageFromSource (NSDictionary *source)
     if (!uri) { return nil; }
     
     NSURL* checkURL = [NSURL URLWithString:uri];
-    if (checkURL && checkURL.scheme && checkURL.host) {
+    if (checkURL && checkURL.scheme) { // remove checkURL.host of the checks as it's nil for file based urls
         return [UIImage imageWithData:[NSData dataWithContentsOfURL:checkURL]];
     }
     
