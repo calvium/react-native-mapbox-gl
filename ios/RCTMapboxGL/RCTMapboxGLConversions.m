@@ -8,13 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
-#if __has_include("RCTConvert+CoreLocation.h")
-#import "RCTConvert+CoreLocation.h"
-#import "RCTConvert+MapKit.h"
-#else
 #import <React/RCTConvert+CoreLocation.h>
-#import <React/RCTConvert+MapKit.h>
-#endif
+#import <React/RCTConvert.h>
 
 #import "RCTMapboxGL.h"
 
