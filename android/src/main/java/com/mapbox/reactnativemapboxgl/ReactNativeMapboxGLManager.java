@@ -1,6 +1,9 @@
 
 package com.mapbox.reactnativemapboxgl;
 
+import android.util.Log;
+import android.view.View;
+
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
@@ -11,9 +14,9 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.modules.core.RCTNativeAppEventEmitter;
+import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
 import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.SimpleViewManager;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdate;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -21,20 +24,29 @@ import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class ReactNativeMapboxGLManager extends SimpleViewManager<ReactNativeMapboxGLView> {
+public class ReactNativeMapboxGLManager extends ViewGroupManager<ReactNativeMapboxGLView> {
 
     private static final String REACT_CLASS = "RCTMapboxGL";
 
     private ReactApplicationContext _context;
+    private Map<ReactNativeMapboxGLView, List<View>> _childViews;
+    private Set<ChildListener> _childListeners;
 
     public ReactNativeMapboxGLManager(ReactApplicationContext context) {
         super();
         _context = context;
+        _childViews = new HashMap<>();
+        _childListeners = new HashSet<>();
     }
 
     @Override
@@ -44,6 +56,16 @@ public class ReactNativeMapboxGLManager extends SimpleViewManager<ReactNativeMap
 
     public ReactApplicationContext getContext() {
         return _context;
+    }
+
+    public List<RNMGLAnnotationView> getAnnotationViews(ReactNativeMapboxGLView parent) {
+        List<RNMGLAnnotationView> annotationViews = new ArrayList<>();
+        for (View view : _childViews.get(parent)) {
+            if (RNMGLAnnotationView.class.equals(view.getClass())) {
+                annotationViews.add((RNMGLAnnotationView) view);
+            }
+        }
+        return annotationViews;
     }
 
     // Lifecycle methods
@@ -65,21 +87,85 @@ public class ReactNativeMapboxGLManager extends SimpleViewManager<ReactNativeMap
     }
 
     // Event types
-
+    @Override
     public @Nullable Map<String, Object> getExportedCustomDirectEventTypeConstants() {
         return MapBuilder.<String,Object>builder()
-                .put("onRegionDidChange", MapBuilder.of("registrationName", "onRegionDidChange"))
-                .put("onRegionWillChange", MapBuilder.of("registrationName", "onRegionWillChange"))
-                .put("onOpenAnnotation", MapBuilder.of("registrationName", "onOpenAnnotation"))
-                .put("onRightAnnotationTapped", MapBuilder.of("registrationName", "onRightAnnotationTapped"))
-                .put("onChangeUserTrackingMode", MapBuilder.of("registrationName", "onChangeUserTrackingMode"))
-                .put("onUpdateUserLocation", MapBuilder.of("registrationName", "onUpdateUserLocation"))
-                .put("onLongPress", MapBuilder.of("registrationName", "onLongPress"))
-                .put("onTap", MapBuilder.of("registrationName", "onTap"))
-                .put("onFinishLoadingMap", MapBuilder.of("registrationName", "onFinishLoadingMap"))
-                .put("onStartLoadingMap", MapBuilder.of("registrationName", "onStartLoadingMap"))
-                .put("onLocateUserFailed", MapBuilder.of("registrationName", "onLocateUserFailed"))
+                .put(ReactNativeMapboxGLEventTypes.ON_REGION_DID_CHANGE, MapBuilder.of("registrationName", "onRegionDidChange"))
+                .put(ReactNativeMapboxGLEventTypes.ON_REGION_WILL_CHANGE, MapBuilder.of("registrationName", "onRegionWillChange"))
+                .put(ReactNativeMapboxGLEventTypes.ON_OPEN_ANNOTATION, MapBuilder.of("registrationName", "onOpenAnnotation"))
+                .put(ReactNativeMapboxGLEventTypes.ON_RIGHT_ANNOTATION_TAPPED, MapBuilder.of("registrationName", "onRightAnnotationTapped"))
+                .put(ReactNativeMapboxGLEventTypes.ON_CHANGE_USER_TRACKING_MODE, MapBuilder.of("registrationName", "onChangeUserTrackingMode"))
+                .put(ReactNativeMapboxGLEventTypes.ON_UPDATE_USER_LOCATION, MapBuilder.of("registrationName", "onUpdateUserLocation"))
+                .put(ReactNativeMapboxGLEventTypes.ON_LONG_PRESS, MapBuilder.of("registrationName", "onLongPress"))
+                .put(ReactNativeMapboxGLEventTypes.ON_TAP, MapBuilder.of("registrationName", "onTap"))
+                .put(ReactNativeMapboxGLEventTypes.ON_FINISH_LOADING_MAP, MapBuilder.of("registrationName", "onFinishLoadingMap"))
+                .put(ReactNativeMapboxGLEventTypes.ON_START_LOADING_MAP, MapBuilder.of("registrationName", "onStartLoadingMap"))
+                .put(ReactNativeMapboxGLEventTypes.ON_LOCATE_USER_FAILED, MapBuilder.of("registrationName", "onLocateUserFailed"))
                 .build();
+    }
+
+    // Children
+
+    public interface ChildListener {
+        void childAdded(View child);
+        void childRemoved(View child);
+    }
+
+    public void addChildListener(ChildListener listener) {
+        _childListeners.add(listener);
+    }
+
+    public void removeChildListener(ChildListener listener) {
+        _childListeners.remove(listener);
+    }
+
+    @Override
+    public void addView(ReactNativeMapboxGLView parent, View child, int index) {
+        if (!_childViews.containsKey(parent)) {
+            _childViews.put(parent, new ArrayList<View>());
+        }
+        _childViews.get(parent).add(index, child);
+        if (!RNMGLAnnotationView.class.equals(child.getClass())) {
+            super.addView(parent, child, getRealIndex(parent, index));
+        }
+        for (ChildListener listener : _childListeners) {
+            listener.childAdded(child);
+        }
+    }
+
+    @Override
+    public int getChildCount(ReactNativeMapboxGLView parent) {
+        return _childViews.get(parent).size();
+    }
+
+    @Override
+    public View getChildAt(ReactNativeMapboxGLView parent, int index) {
+        return _childViews.get(parent).get(index);
+    }
+
+    @Override
+    public void removeViewAt(ReactNativeMapboxGLView parent, int index) {
+        int realIndex = getRealIndex(parent, index);
+        View child = _childViews.get(parent).remove(index);
+        if (!RNMGLAnnotationView.class.equals(child.getClass())) {
+            super.removeViewAt(parent, realIndex);
+        }
+        for (ChildListener listener : _childListeners) {
+            listener.childRemoved(child);
+        }
+        if (_childViews.get(parent).isEmpty()) {
+            _childViews.remove(parent);
+        }
+    }
+
+    private int getRealIndex(ReactNativeMapboxGLView parent, int index) {
+        int annotationViews = 0;
+        for (int i = 0; i < index; i++) {
+            if (RNMGLAnnotationView.class.equals(getChildAt(parent, i).getClass())) {
+                annotationViews++;
+            }
+        }
+        return index - annotationViews;
     }
 
     // Props
@@ -198,6 +284,7 @@ public class ReactNativeMapboxGLManager extends SimpleViewManager<ReactNativeMap
     public static final int COMMAND_SELECT_ANNOTATION = 7;
     public static final int COMMAND_SPLICE_ANNOTATIONS = 8;
     public static final int COMMAND_DESELECT_ANNOTATION = 9;
+    public static final int COMMAND_SET_LAYERS = 10;
 
     @Override
     public
@@ -213,6 +300,7 @@ public class ReactNativeMapboxGLManager extends SimpleViewManager<ReactNativeMap
                 .put("selectAnnotation", COMMAND_SELECT_ANNOTATION)
                 .put("spliceAnnotations", COMMAND_SPLICE_ANNOTATIONS)
                 .put("deselectAnnotation", COMMAND_DESELECT_ANNOTATION)
+                .put("setLayers", COMMAND_SET_LAYERS)
                 .build();
     }
 
@@ -259,6 +347,9 @@ public class ReactNativeMapboxGLManager extends SimpleViewManager<ReactNativeMap
                 break;
             case COMMAND_DESELECT_ANNOTATION:
                 deselectAnnotation(view);
+                break;
+            case COMMAND_SET_LAYERS:
+                setLayers(view, args.getArray(0), args.getArray(1));
                 break;
             default:
                 throw new JSApplicationIllegalArgumentException("Invalid commandId " + commandId + " sent to " + getClass().getSimpleName());
@@ -369,6 +460,22 @@ public class ReactNativeMapboxGLManager extends SimpleViewManager<ReactNativeMap
                 (int) paddingBottom
         );
         view.setCameraUpdate(update, animated ? MapboxConstants.ANIMATION_DURATION : 0, null);
+    }
+
+    // Layers
+
+    public void setLayers(ReactNativeMapboxGLView view, ReadableArray layerIdsToRemove, ReadableArray layersToSet) {
+        int removeCount = layerIdsToRemove.size();
+        for (int i = 0; i < removeCount; i++) {
+            view.removeLayer(layerIdsToRemove.getString(i));
+        }
+
+        int addCount = layersToSet.size();
+        for (int i = 0; i < addCount; i++) {
+            ReadableMap layerInfo = layersToSet.getMap(i);
+            RNMGLLayer layer = RNMGLLayerFactory.getLayerFromJS(layerInfo);
+            view.setLayer(layer);
+        }
     }
 
     // Annotations

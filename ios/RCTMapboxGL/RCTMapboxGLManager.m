@@ -464,6 +464,15 @@ RCT_EXPORT_METHOD(spliceAnnotations:(nonnull NSNumber *)reactTag
     }];
 }
 
+RCT_EXPORT_METHOD(setLayers:(nonnull NSNumber *)reactTag
+                  layerIdsToRemove:(nonnull NSArray<NSString *> *)layerIdsToRemove
+                  layersToSet:(nonnull NSArray *)layersToSet)
+{
+    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTMapboxGL *> *viewRegistry) {
+        // TODO: noop on iOS for now
+    }];
+}
+
 RCT_EXPORT_METHOD(getCenterCoordinateZoomLevel:(nonnull NSNumber *)reactTag
                   callback:(RCTResponseSenderBlock)callback)
 {
