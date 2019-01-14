@@ -32,6 +32,11 @@ import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.UiSettings;
+import com.mapbox.mapboxsdk.style.layers.Layer;
+import com.mapbox.mapboxsdk.style.layers.NoSuchLayerException;
+import com.mapbox.mapboxsdk.style.layers.RasterLayer;
+import com.mapbox.mapboxsdk.style.sources.NoSuchSourceException;
+import com.mapbox.mapboxsdk.style.sources.Source;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -79,12 +84,13 @@ public class ReactNativeMapboxGLView extends RelativeLayout implements
     private Map<String, Annotation> _annotations = new HashMap<>();
     private Map<Long, String> _annotationIdsToName = new HashMap<>();
     private Map<String, RNMGLAnnotationOptions> _annotationOptions = new HashMap<>();
-    private Map<String, MarkerView> _customAnnodationIds = new HashMap<>();
+    private Map<String, MarkerView> _customAnnotationIds = new HashMap<>();
     private Map<String, RNMGLAnnotationView> _customAnnotationViewMap = new HashMap<>();
     private Map<RNMGLAnnotationView, RNMGLAnnotationView.PropertyListener> _propertyListeners = new HashMap<>();
 
-    private Handler _handler;
+    private Map<String, RNMGLLayer> _layers = new HashMap<>();
 
+    private Handler _handler;
 
     @UiThread
     public ReactNativeMapboxGLView(Context context, ReactNativeMapboxGLManager manager) {
@@ -205,6 +211,11 @@ public class ReactNativeMapboxGLView extends RelativeLayout implements
             _annotationIdsToName.put(annotation.getId(), entry.getKey());
         }
 
+        // Make sure all layers are added
+        for (Map.Entry<String, RNMGLLayer> entry : _layers.entrySet()) {
+            entry.getValue().addToMap(this._map);
+        }
+
         _annotationOptions.clear();
 
         _map.getMarkerViewManager().addMarkerViewAdapter(
@@ -251,7 +262,7 @@ public class ReactNativeMapboxGLView extends RelativeLayout implements
         for (RNMGLAnnotationView annotationView : removedChildren) {
             annotationView.removePropertyListener(_propertyListeners.get(annotationView));
             _customAnnotationViewMap.remove(annotationView.getAnnotationId());
-            MarkerView markerView = _customAnnodationIds.remove(annotationView.getAnnotationId());
+            MarkerView markerView = _customAnnotationIds.remove(annotationView.getAnnotationId());
             _map.removeMarker(markerView);
         }
 
@@ -263,7 +274,7 @@ public class ReactNativeMapboxGLView extends RelativeLayout implements
                     .anchor(0.5f, 0.5f)
                     .flat(true);
             final MarkerView markerView = _map.addMarker(options);
-            _customAnnodationIds.put(annotationView.getAnnotationId(), markerView);
+            _customAnnotationIds.put(annotationView.getAnnotationId(), markerView);
             _annotationIdsToName.put(markerView.getId(), annotationView.getAnnotationId());
             RNMGLAnnotationView.PropertyListener propertyListener = new RNMGLAnnotationView.PropertyListener() {
                 @Override
@@ -377,6 +388,19 @@ public class ReactNativeMapboxGLView extends RelativeLayout implements
         if (styleURL.equals(_mapOptions.getStyle())) { return; }
         _mapOptions.styleUrl(styleURL);
         if (_map != null) { _map.setStyleUrl(styleURL); }
+    }
+
+    public void setLayer(RNMGLLayer layer) {
+        layer.addToMap(this._map);
+        _layers.put(layer.GetId(), layer);
+    }
+
+    public void removeLayer(String layerId) {
+        RNMGLLayer layer = _layers.get(layerId);
+        if (layer != null) {
+            layer.removeFromMap(this._map);
+            _layers.remove(layerId);
+        }
     }
 
     public void setDebugActive(boolean value) {

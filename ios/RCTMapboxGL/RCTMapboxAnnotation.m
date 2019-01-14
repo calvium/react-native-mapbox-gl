@@ -9,18 +9,10 @@
 
 #import "RCTMapboxAnnotation.h"
 
-#if __has_include("RCTEventDispatcher.h")
-#import "RCTEventDispatcher.h"
-#import "UIView+React.h"
-#import "RCTBridge.h"
-#import "RCTUtils.h"
-#else
 #import <React/RCTEventDispatcher.h>
 #import <React/UIView+React.h>
 #import <React/RCTBridge.h>
 #import <React/RCTUtils.h>
-#endif
-
 
 @implementation RCTMapboxAnnotation {
 }

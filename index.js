@@ -1,7 +1,7 @@
 'use strict';
 
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import {
   ViewPropTypes,
   NativeModules,
@@ -335,6 +335,12 @@ class MapView extends Component {
     userLocationVerticalAlignment: PropTypes.number,
     contentInset: PropTypes.arrayOf(PropTypes.number),
 
+    layers: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
+      properties: PropTypes.object,
+    })),
+
     annotations: PropTypes.arrayOf(PropTypes.shape({
       coordinates: PropTypes.array.isRequired,
       title: PropTypes.string,
@@ -399,7 +405,36 @@ class MapView extends Component {
     contentInset: [0, 0, 0, 0]
   };
 
+  resolveLayers(oldLayers, newLayers) {
+    if (oldLayers !== newLayers) {
+      const layersToSet = [];
+      const layerIdsToRemove = [];
+
+      if (newLayers) {
+        newLayers.forEach(layer => {
+          const id = layer.id;
+          if (!oldLayers || !isEqual(oldLayers[id], layer)) {
+            layersToSet.push(layer);
+          }
+        });
+      }
+
+      if (oldLayers) {
+        oldLayers.forEach(layer => {
+          const id = layer.id;
+          if (!newLayers || !newLayers[id]) {
+            layerIdsToRemove.push(id);
+          }
+        });
+      }
+
+      MapboxGLManager.setLayers(findNodeHandle(this), layerIdsToRemove, layersToSet);
+    }
+  }
+
   componentWillReceiveProps(newProps) {
+    this.resolveLayers(this.props.layers, newProps.layers);
+
     const oldKeys = clone(this._annotations);
     const itemsToAdd = [];
     const itemsToRemove = [];
@@ -434,6 +469,7 @@ class MapView extends Component {
     if (this._native === ref) { return; }
     this._native = ref;
 
+    MapboxGLManager.setLayers(findNodeHandle(this), [], this.props.layers);
     MapboxGLManager.spliceAnnotations(findNodeHandle(this), true, [], this.props.annotations);
 
     const isImmutable = this.props.annotationsAreImmutable;

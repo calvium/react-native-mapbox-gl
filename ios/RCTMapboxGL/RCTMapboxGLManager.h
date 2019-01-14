@@ -6,11 +6,7 @@
 //  Copyright (c) 2015 Mapbox. All rights reserved.
 //
 
-#if __has_include("RCTViewManager.h")
-#import "RCTViewManager.h"
-#else
 #import <React/RCTViewManager.h>
-#endif
 
 
 @interface RCTMapboxGLManager : RCTViewManager {

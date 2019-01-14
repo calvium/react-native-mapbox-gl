@@ -10,21 +10,12 @@
 #import "RCTMapboxGL.h"
 #import <Mapbox/Mapbox.h>
 
-#if __has_include("RCTConvert+CoreLocation.h")
-#import "RCTConvert+CoreLocation.h"
-#import "RCTConvert+MapKit.h"
-#import "RCTBridge.h"
-#import "RCTEventDispatcher.h"
-#import "UIView+React.h"
-#import "RCTUIManager.h"
-#else
 #import <React/RCTConvert+CoreLocation.h>
 #import <React/RCTConvert.h>
 #import <React/RCTBridge.h>
 #import <React/RCTEventDispatcher.h>
 #import <React/UIView+React.h>
 #import <React/RCTUIManager.h>
-#endif
 
 #import "RCTMapboxGLConversions.h"
 #import "MGLPolygon+RCTAdditions.h"
@@ -550,6 +541,15 @@ RCT_EXPORT_METHOD(spliceAnnotations:(nonnull NSNumber *)reactTag
         for (NSObject * annotationObject in toAdd) {
             [mapView upsertAnnotation:convertToMGLAnnotation(annotationObject)];
         }
+    }];
+}
+
+RCT_EXPORT_METHOD(setLayers:(nonnull NSNumber *)reactTag
+                  layerIdsToRemove:(nonnull NSArray<NSString *> *)layerIdsToRemove
+                  layersToSet:(nonnull NSArray *)layersToSet)
+{
+    [_bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTMapboxGL *> *viewRegistry) {
+        // TODO: noop on iOS for now
     }];
 }
 
